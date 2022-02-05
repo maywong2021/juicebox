@@ -1,8 +1,23 @@
 const express = require('express');
 const postsRouter = express.Router();
 const { requireUser } = require('./utils');
-const { createPost, updatePost, getPostById } = require('../db');
+const { createPost, updatePost, getPostById, getAllPosts } = require('../db');
 
+postsRouter.get('/', async (req, res, next) => {
+    try{
+        const allPosts = await getAllPosts();
+
+        const posts = allPosts.filter(post => {
+            // keep a post if it is either active, or if it belongs to the current user
+            return post.active || (req.user && post.author.id === req.user.id);
+        });
+
+        res.send({posts});
+
+    } catch ({ name, message }) {
+        next({ name, message });
+    }
+});
 
 postsRouter.post('/', requireUser, async (req, res, next) => {
     const { title, content, tags = "" } = req.body;
